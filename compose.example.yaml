@@ -1,0 +1,47 @@
+name: watchersys
+
+services:
+  recovery-watcher:
+    build: .
+    restart: unless-stopped
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_PORT: "3306"
+      MYSQL_DATABASE: fleet
+      MYSQL_USER: fleet
+      MYSQL_PASSWORD_FILE: /run/secrets/mysql-password
+      MYSQL_SSL_CA: /etc/ssl/fleet/mysql-ca.pem
+      POLICY_ID: "2"
+      PF_SECURITY_EVENT_ID: "3500001"
+      CVE_REGEX: "^CVE-2018-10115$"
+      PF_CVE_SECURITY_EVENT_ID: "3500002"
+      PF_BASE_URL: "https://packetfence.example:9999"
+      PF_CA_FILE: /etc/ssl/packetfence/ca.crt
+      PF_ALLOW_LEGACY_CA: "false"
+      PF_TIMEZONE: "America/New_York"
+      PF_CREDENTIAL_FILE: /run/secrets/pf-recovery-env
+      STATE_FILE: /var/lib/fleet-recovery/state.json
+      POLL_SECONDS: "2"
+    volumes:
+      - ${MYSQL_CA_FILE}:/etc/ssl/fleet/mysql-ca.pem:ro
+      - ${PACKETFENCE_CA_FILE}:/etc/ssl/packetfence/ca.crt:ro
+      - recovery-state:/var/lib/fleet-recovery
+    secrets:
+      - mysql-password
+      - pf-recovery-env
+    networks:
+      - fleet-internal
+
+secrets:
+  mysql-password:
+    file: ./mysql-password
+  pf-recovery-env:
+    file: ./pf-recovery.env
+
+networks:
+  fleet-internal:
+    external: true
+    name: ${FLEET_DOCKER_NETWORK}
+
+volumes:
+  recovery-state:

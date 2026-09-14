@@ -1,0 +1,21 @@
+# Secrets and local configuration
+.env
+mysql-password
+pf-recovery.env
+*.key
+*.pem
+
+# Runtime state
+recovery-state/
+state.json
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+
+# Editor and OS files
+.vscode/
+.idea/
+.DS_Store

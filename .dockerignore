@@ -1,0 +1,15 @@
+.git
+.gitignore
+.env
+mysql-password
+pf-recovery.env
+recovery-state
+__pycache__
+*.py[cod]
+.pytest_cache
+.venv
+*.key
+*.pem
+tests
+README.md
+compose.example.yaml
