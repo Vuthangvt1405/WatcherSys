@@ -2,6 +2,7 @@
 .env
 mysql-password
 pf-recovery.env
+recovery-watcher.env
 *.key
 *.pem
 
