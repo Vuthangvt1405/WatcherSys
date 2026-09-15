@@ -8,6 +8,12 @@ The controller is recovery-only:
 - WatcherSys handles a real `fail -> pass` or `vulnerable -> clean` transition.
 - It does not generate CVE findings, send the initial violation webhook, assign an isolation VLAN, or replace PacketFence CoA configuration.
 
+Additional lab components in this repository:
+
+- `cvss-proxy/` enriches Fleet CVE webhooks with an NVD CVSS score and forwards them to PacketFence. PacketFence retains ownership of the severity threshold.
+- `vulnerability-test/` contains the controlled 7-Zip CVE-2018-10115 test and remediation harness. Its current workflow does not restart Fleet osquery, Orbit, or osqueryd.
+- `packetfence-lab-ca.crt` is the public PacketFence lab CA certificate used for TLS verification. It contains no private key.
+
 ## Tested environment
 
 - FleetDM 4.90.1
@@ -390,8 +396,15 @@ git init
 git add .
 git commit -m "first commit"
 git branch -M main
-git remote add origin https://github.com/Vuthangvt1405/WatcherSys.git
+git remote add origin git@github.com:Vuthangvt1405/WatcherSys.git
 git push -u origin main
 ```
 
-GitHub authentication is required for the final push.
+For HTTPS authentication, configure Git to use a credential helper that retrieves the token from the system keyring at runtime rather than embedding credentials in the remote URL:
+
+```bash
+git config --global credential.helper store
+git remote set-url origin https://github.com/Vuthangvt1405/WatcherSys.git
+```
+
+Then store the token once via a secure prompt or `gh auth login`. Never commit `.env`, `mysql-password`, `pf-recovery.env`, private keys, or the state file.
