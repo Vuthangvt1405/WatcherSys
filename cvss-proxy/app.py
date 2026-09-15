@@ -14,8 +14,16 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 logger = logging.getLogger("fleet-cvss-proxy")
 
 DEFAULT_NVD_API_URL = "https://services.nvd.nist.gov/rest/json/cves/2.0"
-DEFAULT_PACKETFENCE_URL = "https://packetfence.example:9999/api/v1/fleetdm-events/cve"
+DEFAULT_CACHE_TTL_SECONDS = 24 * 60 * 60
+DEFAULT_PACKETFENCE_CREDENTIAL_FILE = "/run/secrets/pf-recovery-env"
 USER_AGENT = "fleet-packetfence-cvss-proxy/1.0"
+
+
+def required_env(name: str) -> str:
+    value = os.getenv(name)
+    if value is None or value == "":
+        raise RuntimeError(f"Missing required environment variable: {name}")
+    return value
 
 
 def env_bool(name: str, default: bool = False) -> bool:
@@ -45,14 +53,16 @@ class Settings:
     @classmethod
     def from_env(cls) -> "Settings":
         return cls(
+            # Optional settings use defaults.
             nvd_api_url=os.getenv("NVD_API_URL", DEFAULT_NVD_API_URL),
-            cache_ttl_seconds=int(os.getenv("CACHE_TTL_SECONDS", str(24 * 60 * 60))),
-            packetfence_url=os.getenv("PACKETFENCE_URL", DEFAULT_PACKETFENCE_URL),
+            cache_ttl_seconds=int(os.getenv("CACHE_TTL_SECONDS", str(DEFAULT_CACHE_TTL_SECONDS))),
+            packetfence_verify_tls=env_bool("PACKETFENCE_VERIFY_TLS", default=False),
+            packetfence_ca_file=os.getenv("PACKETFENCE_CA_FILE", ""),
+            packetfence_credential_file=os.getenv("PF_CREDENTIAL_FILE", DEFAULT_PACKETFENCE_CREDENTIAL_FILE),
             packetfence_user=os.getenv("PACKETFENCE_USER", ""),
             packetfence_password=os.getenv("PACKETFENCE_PASSWORD", ""),
-            packetfence_ca_file=os.getenv("PACKETFENCE_CA_FILE", ""),
-            packetfence_verify_tls=env_bool("PACKETFENCE_VERIFY_TLS", default=False),
-            packetfence_credential_file=os.getenv("PF_CREDENTIAL_FILE", "/run/secrets/pf-recovery-env"),
+            # Required settings must be explicit in the environment.
+            packetfence_url=required_env("PACKETFENCE_URL"),
         )
 
 
