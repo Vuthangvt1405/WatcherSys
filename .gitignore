@@ -3,7 +3,11 @@
 mysql-password
 pf-recovery.env
 recovery-watcher.env
+recovery-watcher/.env
+recovery-watcher/mysql-password
+recovery-watcher/pf-recovery.env
 recovery-watcher/recovery-watcher.env
+cvss-proxy/.env
 *.key
 *.pem
 

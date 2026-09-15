@@ -1,0 +1,12 @@
+name: cvss-proxy
+
+services:
+  cvss-proxy:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+    volumes:
+      - ${PACKETFENCE_CA_FILE_HOST:-../packetfence-lab-ca.crt}:/etc/ssl/packetfence/ca.crt:ro

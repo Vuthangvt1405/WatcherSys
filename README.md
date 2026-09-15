@@ -1,73 +1,65 @@
 # WatcherSys
 
-WatcherSys contains lab components for FleetDM and PacketFence recovery workflows.
+Independent FleetDM/PacketFence lab components. Each folder runs separately; do not deploy everything together unless you intentionally need that workflow.
 
-## Components
+## Repository layout
+
+Root keeps only shared docs/config:
 
 ```text
 WatcherSys/
-├── recovery-watcher/        # Fleet policy/CVE recovery watcher
-├── cvss-proxy/              # Fleet CVE webhook CVSS enrichment proxy
-├── vulnerability-test/      # Controlled Windows 7-Zip CVE test scripts
-├── compose.example.yaml     # Docker Compose example
-├── .env.example             # Compose host-side placeholder values
-├── mysql-password.example   # Fleet MySQL password placeholder
-└── pf-recovery.env.example  # PacketFence API credential placeholders
+├── README.md
+├── .gitignore
+├── packetfence-lab-ca.crt
+├── recovery-watcher/
+├── cvss-proxy/
+└── vulnerability-test/
 ```
 
-## Configure placeholders
+## recovery-watcher
 
-Copy the example files and replace all placeholder values for your environment.
+Purpose: watches Fleet MySQL for policy/CVE recovery transitions and closes matching open PacketFence security events.
 
 ```bash
+cd recovery-watcher
 cp .env.example .env
 cp mysql-password.example mysql-password
 cp pf-recovery.env.example pf-recovery.env
-cp recovery-watcher/recovery-watcher.env.example recovery-watcher/recovery-watcher.env
-cp cvss-proxy/.env.example cvss-proxy/.env
-chmod 600 .env mysql-password pf-recovery.env recovery-watcher/recovery-watcher.env cvss-proxy/.env
-```
+cp recovery-watcher.env.example recovery-watcher.env
+chmod 600 .env mysql-password pf-recovery.env recovery-watcher.env
 
-Example values to replace:
-
-```dotenv
-FLEET_DOCKER_NETWORK=your-fleet-docker-network
-MYSQL_CA_FILE=/absolute/path/to/mysql-ca.pem
-PACKETFENCE_CA_FILE=/absolute/path/to/packetfence-ca.crt
-PACKETFENCE_HOST=packetfence.example
-FLEET_HOST=fleet.example
-PF_BASE_URL=https://packetfence.example:9999
-PACKETFENCE_URL=https://packetfence.example:9999/api/v1/fleetdm-events/cve
-PF_RECOVERY_USER=watcher-recovery
-PF_RECOVERY_PASSWORD=replace-with-packetfence-api-password
-MYSQL_PASSWORD=replace-with-fleet-mysql-password
-```
-
-Do not commit real `.env`, password, private key, or runtime state files.
-
-## Run
-
-```bash
 docker compose -f compose.example.yaml config
 docker compose -f compose.example.yaml up -d --build
-docker compose -f compose.example.yaml ps
+docker compose -f compose.example.yaml logs --tail=50 recovery-watcher
 ```
 
-## Logs
+Tests:
 
 ```bash
-docker compose -f compose.example.yaml logs --tail=50 recovery-watcher
+cd recovery-watcher
+python3 -m unittest discover -s tests -t . -v
+```
+
+## cvss-proxy
+
+Purpose: receives Fleet CVE webhooks, looks up CVSS from NVD, and forwards the enriched event to PacketFence.
+
+```bash
+cd cvss-proxy
+cp .env.example .env
+chmod 600 .env
+
+docker compose -f compose.example.yaml config
+docker compose -f compose.example.yaml up -d --build
 docker compose -f compose.example.yaml logs --tail=50 cvss-proxy
 ```
 
-## Test recovery watcher
+## vulnerability-test
 
-```bash
-python3 -m unittest discover -s tests -t recovery-watcher -v
-```
+Purpose: controlled Windows scripts for testing vulnerable/remediated 7-Zip CVE behavior in the lab.
 
-## Stop
+Use only on disposable lab hosts.
 
-```bash
-docker compose -f compose.example.yaml stop
-```
+## Secrets
+
+Do not commit real `.env`, password, private key, or runtime state files. Example files contain placeholders only.
