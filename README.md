@@ -77,7 +77,8 @@ Test-NetConnection 172.16.1.4 -Port 8080
 cp .env.example .env
 cp mysql-password.example mysql-password
 cp pf-recovery.env.example pf-recovery.env
-chmod 600 .env mysql-password pf-recovery.env
+cp recovery-watcher/recovery-watcher.env.example recovery-watcher/recovery-watcher.env
+chmod 600 .env mysql-password pf-recovery.env recovery-watcher/recovery-watcher.env
 ```
 
 `.env`:
@@ -139,7 +140,7 @@ docker compose -f compose.example.yaml logs --since=10m recovery-watcher
 ## 8. Test
 
 ```bash
-python3 -m unittest discover -s tests -v
+python3 -m unittest discover -s tests -t recovery-watcher -v
 ```
 
 ## 9. Restart

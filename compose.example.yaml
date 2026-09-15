@@ -2,7 +2,7 @@ name: watchersys
 
 services:
   recovery-watcher:
-    build: .
+    build: ./recovery-watcher
     restart: unless-stopped
     environment:
       MYSQL_HOST: mysql
