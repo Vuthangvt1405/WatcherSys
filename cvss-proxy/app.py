@@ -20,23 +20,28 @@ USER_AGENT = "fleet-packetfence-cvss-proxy/1.0"
 
 
 def required_env(name: str) -> str:
-    value = os.getenv(name)
-    if value is None or value == "":
+    if name not in os.environ or os.environ[name] == "":
         raise RuntimeError(f"Missing required environment variable: {name}")
+    return os.environ[name]
+
+
+def optional_env(name: str, default: str) -> str:
+    value = os.environ.get(name)
+    if value is None or value == "":
+        return default
     return value
 
 
 def env_bool(name: str, default: bool = False) -> bool:
-    value = os.getenv(name)
-    if value is None:
+    if name not in os.environ or os.environ[name] == "":
         return default
 
-    normalized = value.strip().lower()
+    normalized = os.environ[name].strip().lower()
     if normalized in {"1", "true", "yes", "on"}:
         return True
     if normalized in {"0", "false", "no", "off"}:
         return False
-    raise ValueError(f"Invalid boolean value for {name}: {value}")
+    raise ValueError(f"Invalid boolean value for {name}: {os.environ[name]}")
 
 
 @dataclass
@@ -54,13 +59,13 @@ class Settings:
     def from_env(cls) -> "Settings":
         return cls(
             # Optional settings use defaults.
-            nvd_api_url=os.getenv("NVD_API_URL", DEFAULT_NVD_API_URL),
-            cache_ttl_seconds=int(os.getenv("CACHE_TTL_SECONDS", str(DEFAULT_CACHE_TTL_SECONDS))),
+            nvd_api_url=optional_env("NVD_API_URL", DEFAULT_NVD_API_URL),
+            cache_ttl_seconds=int(optional_env("CACHE_TTL_SECONDS", str(DEFAULT_CACHE_TTL_SECONDS))),
             packetfence_verify_tls=env_bool("PACKETFENCE_VERIFY_TLS", default=False),
-            packetfence_ca_file=os.getenv("PACKETFENCE_CA_FILE", ""),
-            packetfence_credential_file=os.getenv("PF_CREDENTIAL_FILE", DEFAULT_PACKETFENCE_CREDENTIAL_FILE),
-            packetfence_user=os.getenv("PACKETFENCE_USER", ""),
-            packetfence_password=os.getenv("PACKETFENCE_PASSWORD", ""),
+            packetfence_ca_file=optional_env("PACKETFENCE_CA_FILE", ""),
+            packetfence_credential_file=optional_env("PF_CREDENTIAL_FILE", DEFAULT_PACKETFENCE_CREDENTIAL_FILE),
+            packetfence_user=optional_env("PACKETFENCE_USER", ""),
+            packetfence_password=optional_env("PACKETFENCE_PASSWORD", ""),
             # Required settings must be explicit in the environment.
             packetfence_url=required_env("PACKETFENCE_URL"),
         )
